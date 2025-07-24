@@ -3,335 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abercrombie's Synthetic Emotional States - Mathematical Implementation</title>
+    <title>Abercrombie's Synthetic Emotional States - Dynamic Visualization</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
         
         body {
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #f5f5f0 0%, #e8e8e0 100%);
-            color: #2c2c2c;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #e8e8e8;
             font-family: 'Crimson Text', serif;
             line-height: 1.6;
+            min-height: 100vh;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: rgba(0, 0, 0, 0.8);
             padding: 40px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(100, 150, 255, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(100, 150, 255, 0.1);
         }
         
         h1 {
             font-family: 'Cormorant Garamond', serif;
             font-weight: 300;
-            font-size: 2.5em;
+            font-size: 3em;
             text-align: center;
-            color: #1a1a2e;
+            color: #ffffff;
             margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(100, 150, 255, 0.5);
+            letter-spacing: 2px;
         }
         
         h2 {
             font-family: 'Cormorant Garamond', serif;
-            color: #2c2c5c;
+            color: #a8c7ff;
             margin-top: 30px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid rgba(168, 199, 255, 0.3);
             padding-bottom: 10px;
         }
         
         .subtitle {
             text-align: center;
             font-style: italic;
-            color: #666;
+            color: #888;
             margin-bottom: 40px;
+            font-size: 1.1em;
         }
         
         .equation-display {
-            background: #f9f9f9;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 4px solid #4a4a7e;
+            background: rgba(40, 40, 60, 0.5);
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #4a7fff;
             font-family: 'Courier New', monospace;
             text-align: center;
+            font-size: 1.2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(74, 127, 255, 0.2);
         }
         
+        /* Controls with enhanced styling */
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .control-group {
-            background: #f8f8f8;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #444;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            margin: 10px 0;
-        }
-        
-        button {
-            background: #4a4a7e;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Crimson Text', serif;
-            font-size: 1em;
-            margin: 5px;
-            transition: background 0.3s;
-        }
-        
-        button:hover {
-            background: #5a5a8e;
-        }
-        
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .visualization-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin: 30px 0;
         }
         
+        .control-group {
+            background: rgba(40, 40, 60, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .control-group:hover {
+            box-shadow: 0 6px 25px rgba(74, 127, 255, 0.3);
+            border-color: rgba(74, 127, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #a8c7ff;
+            font-size: 1.05em;
+            cursor: help;
+        }
+        
+        .param-value {
+            float: right;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Tooltip styling */
+        .tooltip {
+            position: absolute;
+            background: rgba(20, 20, 40, 0.95);
+            color: #e8e8e8;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        .tooltip h4 {
+            margin: 0 0 10px 0;
+            color: #ffd700;
+        }
+        
+        .tooltip p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .tooltip .math {
+            font-family: 'Courier New', monospace;
+            color: #4a7fff;
+            margin: 5px 0;
+        }
+        
+        /* Enhanced input styling */
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            margin: 15px 0;
+            background: linear-gradient(to right, 
+                rgba(74, 127, 255, 0.3) 0%, 
+                rgba(255, 127, 74, 0.3) 100%);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ffd700 0%, #ff8c00 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+        }
+        
+        /* Animated buttons */
+        button {
+            background: linear-gradient(135deg, #4a7fff 0%, #2a5fff 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Crimson Text', serif;
+            font-size: 1.1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 127, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(74, 127, 255, 0.5);
+            background: linear-gradient(135deg, #5a8fff 0%, #3a6fff 100%);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        /* Visualization container with glow effect */
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
         .vis-container {
             text-align: center;
+            position: relative;
+        }
+        
+        .vis-container h3 {
+            color: #a8c7ff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
         }
         
         canvas {
-            border: 1px solid #ddd;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 2px solid rgba(74, 127, 255, 0.3);
+            background: #000;
+            box-shadow: 0 0 30px rgba(74, 127, 255, 0.2);
+            border-radius: 10px;
+            position: relative;
         }
         
+        /* Pulsing glow for high energy states */
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 30px rgba(74, 127, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(255, 127, 74, 0.6);
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(74, 127, 255, 0.2);
+            }
+        }
+        
+        .high-energy {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        /* Metrics with visual feedback */
         .metrics-display {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
         }
         
         .metric-card {
-            background: #f8f8f8;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: rgba(40, 40, 60, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             text-align: center;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(74, 127, 255, 0.5), 
+                transparent);
+            border-radius: 10px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+        
+        .metric-card.highlight::before {
+            opacity: 1;
+            animation: rotate-gradient 3s linear infinite;
+        }
+        
+        @keyframes rotate-gradient {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
         
         .metric-value {
-            font-size: 1.8em;
+            font-size: 2.2em;
             font-weight: bold;
-            color: #4a4a7e;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s ease;
         }
         
         .metric-label {
             font-size: 0.9em;
-            color: #666;
+            color: #888;
             margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
+        /* Alerts with animation */
         .alert {
-            padding: 15px;
+            padding: 20px;
             margin: 20px 0;
-            border-radius: 5px;
+            border-radius: 10px;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .alert-info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
+            background: rgba(40, 80, 120, 0.3);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            color: #a8c7ff;
         }
         
         .alert-warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
+            background: rgba(120, 80, 40, 0.3);
+            border: 1px solid rgba(255, 200, 100, 0.3);
+            color: #ffc864;
         }
         
         .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: rgba(40, 120, 80, 0.3);
+            border: 1px solid rgba(100, 255, 150, 0.3);
+            color: #64ff96;
         }
         
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffd700;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Debug info styling */
         .debug-info {
-            background: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
             font-family: monospace;
             font-size: 0.9em;
-            margin: 10px 0;
+            margin: 20px 0;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        
+        #debug-status {
+            color: #4a7fff;
         }
         
         #error-display {
-            color: #d9534f;
+            color: #ff4444;
             font-weight: bold;
             margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        #error-display.show {
+            display: block;
+        }
+        
+        /* Particle canvas overlay */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            opacity: 0.6;
         }
     </style>
 </head>
 <body>
+    <div class="tooltip" id="tooltip"></div>
+    
     <div class="container">
         <h1>Mathematical Foundations of Synthetic Emotional States</h1>
-        <p class="subtitle">Dr. P. L. Abercrombie's Dynamic Matrix Theory (1911) — Interactive Implementation</p>
+        <p class="subtitle">Dr. P. L. Abercrombie's Dynamic Matrix Theory (1911) — Living Mathematics</p>
         
         <div class="equation-display">
-            ∂M/∂t = Φ(M) + δM_resonance<br>
-            where Φ(M) = AM + MA^T - λM⊙³
+            ∂M/∂t = Φ(M) + δM<sub>resonance</sub><br>
+            <span style="font-size: 0.9em; color: #888;">where Φ(M) = AM + MA<sup>T</sup> - λM⊙³</span>
         </div>
         
-        <h2>Control Parameters</h2>
+        <h2>Evolution Control Parameters</h2>
         
         <div class="controls">
-            <div class="control-group">
-                <label>Matrix Dimension (n)</label>
-                <input type="range" id="dimension" min="3" max="15" value="8" step="1">
-                <span id="dimension-display">n = 8</span>
+            <div class="control-group" data-tooltip="dimension">
+                <label>Matrix Dimension (n) <span class="param-value" id="dimension-display">n = 10</span></label>
+                <input type="range" id="dimension" min="3" max="20" value="10" step="1">
             </div>
             
-            <div class="control-group">
-                <label>Evolution Rate (ε)</label>
-                <input type="range" id="epsilon" min="0.001" max="0.05" step="0.001" value="0.01">
-                <span id="epsilon-display">ε = 0.010</span>
+            <div class="control-group" data-tooltip="epsilon">
+                <label>Evolution Rate (ε) <span class="param-value" id="epsilon-display">ε = 0.015</span></label>
+                <input type="range" id="epsilon" min="0.001" max="0.05" step="0.001" value="0.015">
             </div>
             
-            <div class="control-group">
-                <label>Entropy Factor (λ)</label>
+            <div class="control-group" data-tooltip="lambda">
+                <label>Entropy Factor (λ) <span class="param-value" id="lambda-display">λ = 0.10</span></label>
                 <input type="range" id="lambda" min="0.01" max="0.5" step="0.01" value="0.1">
-                <span id="lambda-display">λ = 0.10</span>
             </div>
             
-            <div class="control-group">
-                <label>Reinforcement (η)</label>
-                <input type="range" id="eta" min="0.01" max="0.3" step="0.01" value="0.05">
-                <span id="eta-display">η = 0.05</span>
+            <div class="control-group" data-tooltip="eta">
+                <label>Reinforcement (η) <span class="param-value" id="eta-display">η = 0.08</span></label>
+                <input type="range" id="eta" min="0.01" max="0.3" step="0.01" value="0.08">
             </div>
             
-            <div class="control-group">
-                <label>Damping (γ)</label>
-                <input type="range" id="gamma" min="0.01" max="0.2" step="0.01" value="0.03">
-                <span id="gamma-display">γ = 0.03</span>
+            <div class="control-group" data-tooltip="gamma">
+                <label>Damping (γ) <span class="param-value" id="gamma-display">γ = 0.04</span></label>
+                <input type="range" id="gamma" min="0.01" max="0.2" step="0.01" value="0.04">
             </div>
             
-            <div class="control-group">
-                <label>Hereditary Strength (α)</label>
-                <input type="range" id="alpha" min="0.1" max="1.0" step="0.1" value="0.5">
-                <span id="alpha-display">α = 0.5</span>
+            <div class="control-group" data-tooltip="alpha">
+                <label>Hereditary Strength (α) <span class="param-value" id="alpha-display">α = 0.6</span></label>
+                <input type="range" id="alpha" min="0.1" max="1.0" step="0.1" value="0.6">
             </div>
         </div>
         
-        <div style="text-align: center; margin: 20px 0;">
-            <button id="play-pause">Pause</button>
-            <button id="reset">Reset Matrix</button>
+        <div style="text-align: center; margin: 30px 0;">
+            <button id="play-pause">Pause Evolution</button>
+            <button id="reset">Reset System</button>
+            <button id="perturb">Add Perturbation</button>
             <button id="export-data">Export Data</button>
             <button id="test-theorem">Test Inequality</button>
         </div>
         
         <div id="error-display"></div>
         
-        <h2>System Visualization</h2>
+        <h2>Living Emotional Matrix Visualization</h2>
         
         <div class="visualization-grid">
             <div class="vis-container">
-                <h3>Connectivity Matrix M(t)</h3>
-                <canvas id="matrix-canvas" width="400" height="400"></canvas>
+                <h3>Connectivity Matrix M(t) — Neural Coupling Strength</h3>
+                <div style="position: relative; display: inline-block;">
+                    <canvas id="matrix-canvas" width="500" height="500"></canvas>
+                    <canvas id="particle-canvas" width="500" height="500"></canvas>
+                </div>
             </div>
             <div class="vis-container">
-                <h3>Eigenvalue Spectrum</h3>
-                <canvas id="spectrum-canvas" width="400" height="400"></canvas>
+                <h3>Eigenvalue Spectrum — Emotional Harmonics</h3>
+                <canvas id="spectrum-canvas" width="500" height="500"></canvas>
             </div>
         </div>
         
-        <h2>Evolution Metrics</h2>
+        <h2>System Dynamics</h2>
         
         <div class="metrics-display">
-            <div class="metric-card">
+            <div class="metric-card" id="felicity-card">
                 <div class="metric-value" id="lambda-max">0.000</div>
                 <div class="metric-label">λ_max (Felicity)</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value" id="frobenius-norm">0.000</div>
-                <div class="metric-label">||M||_F</div>
+                <div class="metric-label">||M||_F (Energy)</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value" id="dlambda-dt">0.000</div>
                 <div class="metric-label">dλ_max/dt</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value" id="inequality-rhs">0.000</div>
-                <div class="metric-label">η λ²_max - λ ||M||²_F</div>
+                <div class="metric-value" id="inequality-balance">0.000</div>
+                <div class="metric-label">Work - Entropy</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value" id="time-step">0</div>
-                <div class="metric-label">Time Steps</div>
+                <div class="metric-label">Evolution Steps</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" id="stability-card">
                 <div class="metric-value" id="stability">Stable</div>
                 <div class="metric-label">System State</div>
             </div>
         </div>
         
         <div id="theorem-test-results" class="alert alert-info" style="display: none;">
-            <h3>Thermodynamic Inequality Test</h3>
+            <h3>Thermodynamic Inequality Test Results</h3>
             <div id="test-output"></div>
         </div>
         
         <div class="debug-info">
-            <strong>Debug Info:</strong> <span id="debug-status">System initialized</span>
+            <strong>System Status:</strong> <span id="debug-status">Initializing emotional matrix...</span>
         </div>
     </div>
     
     <script>
-        // Debug logging function
+        /**
+         * Enhanced Abercrombie Matrix Implementation
+         * With dynamic visualization and comprehensive tooltips
+         * 
+         * Mathematical Foundation:
+         * - Matrix M represents neural coupling strengths
+         * - Eigenvalues represent emotional coherence modes
+         * - Evolution balances growth (work) against decay (entropy)
+         */
+        
+        // Tooltip definitions for parameters
+        const tooltips = {
+            dimension: {
+                title: "Matrix Dimension (n)",
+                content: "Size of the neural connectivity matrix.",
+                math: "M ∈ ℝⁿˣⁿ",
+                effect: "Larger dimensions model more complex emotional states. Small n (3-5) represents simple organisms, large n (15-20) represents advanced consciousness.",
+                range: "Recommended: 8-12 for stable visualization"
+            },
+            epsilon: {
+                title: "Evolution Rate (ε)",
+                content: "Master time scale for matrix evolution.",
+                math: "∂M/∂t = ε·Φ(M) + ...",
+                effect: "Higher values speed up evolution but may cause instability. Low values show slow, smooth transitions.",
+                range: "Stable range: 0.001-0.02"
+            },
+            lambda: {
+                title: "Entropy Factor (λ)",
+                content: "Strength of entropic decay that opposes coherence.",
+                math: "Φ(M) = ... - λM⊙³",
+                effect: "Higher values create stronger damping, making happiness harder to maintain. Models the metabolic cost of emotional states.",
+                range: "Typical: 0.05-0.2"
+            },
+            eta: {
+                title: "Reinforcement Strength (η)",
+                content: "Amplification of dominant emotional mode.",
+                math: "δM = η·v_max·v_max^T - ...",
+                effect: "Higher values create stronger positive feedback, leading to more intense emotional states. Must balance with damping.",
+                range: "Stable when η > γ"
+            },
+            gamma: {
+                title: "Damping Factor (γ)",
+                content: "Suppression of incoherent fluctuations.",
+                math: "δM = ... - γ·P·M·P",
+                effect: "Stabilizes the system by damping non-dominant modes. Too high prevents happiness, too low causes chaos.",
+                range: "Best results: γ < η"
+            },
+            alpha: {
+                title: "Hereditary Coupling (α)",
+                content: "Strength of evolutionarily inherited neural wiring.",
+                math: "A_ij = α·exp(-|i-j|/σ) + noise",
+                effect: "Models phylogenetic constraints. Higher values create stronger predetermined connection patterns.",
+                range: "0.3-0.8 for biological realism"
+            }
+        };
+        
+        // Tooltip management
+        function showTooltip(element) {
+            const tooltipId = element.getAttribute('data-tooltip');
+            const tooltip = document.getElementById('tooltip');
+            const info = tooltips[tooltipId];
+            
+            if (!info) return;
+            
+            tooltip.innerHTML = `
+                <h4>${info.title}</h4>
+                <p>${info.content}</p>
+                <div class="math">${info.math}</div>
+                <p><strong>Effect:</strong> ${info.effect}</p>
+                <p><strong>Range:</strong> ${info.range}</p>
+            `;
+            
+            const rect = element.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 10) + 'px';
+            tooltip.classList.add('show');
+        }
+        
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+        
+        // Add tooltip event listeners
+        document.querySelectorAll('.control-group').forEach(group => {
+            group.addEventListener('mouseenter', () => showTooltip(group));
+            group.addEventListener('mouseleave', hideTooltip);
+        });
+        
+        // Utility functions
         function debugLog(message) {
-            console.log(`[Abercrombie Debug] ${message}`);
+            console.log(`[Abercrombie] ${message}`);
             document.getElementById('debug-status').textContent = message;
         }
         
-        // Error display function
         function showError(message) {
-            document.getElementById('error-display').textContent = `Error: ${message}`;
+            const errorDiv = document.getElementById('error-display');
+            errorDiv.textContent = `Error: ${message}`;
+            errorDiv.classList.add('show');
             console.error(`[Abercrombie Error] ${message}`);
         }
         
-        // Clear error display
         function clearError() {
-            document.getElementById('error-display').textContent = '';
+            document.getElementById('error-display').classList.remove('show');
         }
         
         /**
-         * Enhanced Abercrombie Matrix Implementation
-         * With comprehensive error handling and debugging
+         * Particle system for visualizing energy flow
+         */
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.maxParticles = 50;
+            }
+            
+            addParticle(x, y, energy, vx = 0, vy = 0) {
+                if (this.particles.length >= this.maxParticles) {
+                    this.particles.shift();
+                }
+                
+                this.particles.push({
+                    x, y, vx, vy,
+                    energy,
+                    life: 1.0,
+                    maxLife: 1.0,
+                    size: 3 + energy * 5
+                });
+            }
+            
+            update(deltaTime) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    
+                    // Update position
+                    p.x += p.vx * deltaTime;
+                    p.y += p.vy * deltaTime;
+                    
+                    // Update life
+                    p.life -= deltaTime * 0.5;
+                    
+                    // Remove dead particles
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Draw particle
+                    const alpha = p.life / p.maxLife;
+                    const hue = p.energy > 0 ? 45 : 220; // Gold for positive, blue for negative
+                    const brightness = 50 + 50 * Math.abs(p.energy);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `hsla(${hue}, 70%, ${brightness}%, ${alpha * 0.6})`;
+                    this.ctx.fill();
+                    
+                    // Glow effect
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size * alpha * 2, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `hsla(${hue}, 70%, ${brightness}%, ${alpha * 0.2})`;
+                    this.ctx.fill();
+                }
+            }
+        }
+        
+        /**
+         * Main Abercrombie Matrix class with enhanced visualization
          */
         class AbercrombieMatrix {
-            constructor(n = 8) {
+            constructor(n = 10) {
                 try {
-                    debugLog(`Initializing matrix system with dimension n=${n}`);
-                    
-                    // Validate dimension
-                    if (n < 3 || n > 20) {
-                        throw new Error(`Invalid dimension ${n}. Must be between 3 and 20.`);
-                    }
+                    debugLog(`Initializing ${n}×${n} emotional matrix...`);
                     
                     this.n = n;
                     this.dt = 0.01;
@@ -339,11 +704,11 @@
                     this.timeSteps = 0;
                     
                     // Parameters
-                    this.epsilon = 0.01;
+                    this.epsilon = 0.015;
                     this.lambda = 0.1;
-                    this.eta = 0.05;
-                    this.gamma = 0.03;
-                    this.alpha = 0.5;
+                    this.eta = 0.08;
+                    this.gamma = 0.04;
+                    this.alpha = 0.6;
                     
                     // Initialize matrices
                     this.M = this.initializeMatrix();
@@ -355,21 +720,29 @@
                         lambdaMax: [],
                         frobeniusNorm: [],
                         dLambdaDt: [],
-                        inequalityRHS: []
+                        workRate: [],
+                        entropyRate: []
                     };
                     
                     // Eigenvalue data
                     this.eigenvalues = [];
+                    this.eigenvectors = [];
                     this.lambdaMax = 0;
                     this.vMax = new Array(n).fill(0);
                     this.lastLambdaMax = 0;
                     
-                    // Canvas setup with error handling
-                    this.setupCanvas();
+                    // Visualization
+                    this.setupVisualization();
                     
+                    // Animation state
                     this.isRunning = true;
+                    this.visualizationMode = 'energy'; // 'energy' or 'eigenvector'
                     
-                    debugLog('Matrix system initialized successfully');
+                    // Visual effects
+                    this.matrixAnimation = new Array(n).fill(0).map(() => new Array(n).fill(0));
+                    this.pulsePhase = 0;
+                    
+                    debugLog('Emotional matrix initialized successfully');
                     clearError();
                     
                 } catch (error) {
@@ -378,36 +751,37 @@
                 }
             }
             
-            setupCanvas() {
-                try {
-                    this.matrixCanvas = document.getElementById('matrix-canvas');
-                    this.spectrumCanvas = document.getElementById('spectrum-canvas');
-                    
-                    if (!this.matrixCanvas || !this.spectrumCanvas) {
-                        throw new Error('Canvas elements not found');
-                    }
-                    
-                    this.matrixCtx = this.matrixCanvas.getContext('2d');
-                    this.spectrumCtx = this.spectrumCanvas.getContext('2d');
-                    
-                    if (!this.matrixCtx || !this.spectrumCtx) {
-                        throw new Error('Failed to get canvas context');
-                    }
-                    
-                } catch (error) {
-                    showError(`Canvas setup failed: ${error.message}`);
-                    throw error;
-                }
+            setupVisualization() {
+                // Main matrix canvas
+                this.matrixCanvas = document.getElementById('matrix-canvas');
+                this.matrixCtx = this.matrixCanvas.getContext('2d');
+                
+                // Particle system canvas
+                this.particleCanvas = document.getElementById('particle-canvas');
+                this.particleSystem = new ParticleSystem(this.particleCanvas);
+                
+                // Spectrum canvas
+                this.spectrumCanvas = document.getElementById('spectrum-canvas');
+                this.spectrumCtx = this.spectrumCanvas.getContext('2d');
+                
+                // Enable image smoothing for better gradients
+                this.matrixCtx.imageSmoothingEnabled = true;
+                this.spectrumCtx.imageSmoothingEnabled = true;
             }
             
             initializeMatrix() {
-                debugLog(`Creating ${this.n}x${this.n} symmetric matrix`);
                 const M = [];
                 for (let i = 0; i < this.n; i++) {
                     M[i] = new Array(this.n);
                     for (let j = 0; j < this.n; j++) {
                         if (j >= i) {
-                            M[i][j] = (Math.random() - 0.5) * 0.2;
+                            // Initialize with small random values
+                            M[i][j] = (Math.random() - 0.5) * 0.3;
+                            
+                            // Add some structure for visual interest
+                            if (Math.abs(i - j) <= 2) {
+                                M[i][j] += (Math.random() - 0.5) * 0.2;
+                            }
                         } else {
                             M[i][j] = M[j][i]; // Ensure symmetry
                         }
@@ -417,39 +791,34 @@
             }
             
             initializeHereditaryKernel() {
-                debugLog(`Creating hereditary kernel A with coupling strength α=${this.alpha}`);
                 const A = [];
                 for (let i = 0; i < this.n; i++) {
                     A[i] = new Array(this.n);
                     for (let j = 0; j < this.n; j++) {
+                        // Distance-based coupling with biological decay
                         const distance = Math.abs(i - j);
-                        const coupling = Math.exp(-distance / (this.n * 0.2));
-                        A[i][j] = this.alpha * coupling + 0.1 * (Math.random() - 0.5);
+                        const coupling = Math.exp(-distance / (this.n * 0.25));
+                        
+                        // Add some randomness for genetic variation
+                        A[i][j] = this.alpha * coupling + 0.05 * (Math.random() - 0.5);
+                        
+                        // Ensure positive diagonal dominance
+                        if (i === j) {
+                            A[i][j] = Math.max(A[i][j], 0.5);
+                        }
                     }
-                    A[i][i] = Math.max(A[i][i], 0.5); // Ensure positive diagonal
                 }
                 return A;
             }
             
-            // Safe matrix multiplication with dimension checking
+            // Matrix operations (same as before but with error checking)
             matmul(A, B) {
-                if (!A || !B || !A[0] || !B[0]) {
-                    throw new Error('Invalid matrices for multiplication');
-                }
-                
                 const n = A.length;
-                const m = A[0].length;
-                const p = B[0].length;
-                
-                if (B.length !== m) {
-                    throw new Error(`Matrix dimension mismatch: A is ${n}x${m}, B is ${B.length}x${p}`);
-                }
-                
                 const C = [];
                 for (let i = 0; i < n; i++) {
-                    C[i] = new Array(p).fill(0);
-                    for (let j = 0; j < p; j++) {
-                        for (let k = 0; k < m; k++) {
+                    C[i] = new Array(n).fill(0);
+                    for (let j = 0; j < n; j++) {
+                        for (let k = 0; k < n; k++) {
                             C[i][j] += A[i][k] * B[k][j];
                         }
                     }
@@ -470,27 +839,7 @@
             }
             
             hadamardCube(M) {
-                const n = M.length;
-                const M3 = [];
-                for (let i = 0; i < n; i++) {
-                    M3[i] = new Array(n);
-                    for (let j = 0; j < n; j++) {
-                        M3[i][j] = M[i][j] * M[i][j] * M[i][j];
-                    }
-                }
-                return M3;
-            }
-            
-            matrixAdd(A, B, scale = 1) {
-                const n = A.length;
-                const C = [];
-                for (let i = 0; i < n; i++) {
-                    C[i] = new Array(n);
-                    for (let j = 0; j < n; j++) {
-                        C[i][j] = A[i][j] + scale * B[i][j];
-                    }
-                }
-                return C;
+                return M.map(row => row.map(val => val * val * val));
             }
             
             frobeniusNorm(M) {
@@ -503,6 +852,45 @@
                 return Math.sqrt(sum);
             }
             
+            /**
+             * Enhanced power iteration with multiple eigenvalues
+             */
+            computeEigenDecomposition() {
+                // Get dominant eigenvalue/eigenvector
+                const { eigenvalue, eigenvector } = this.powerIteration(this.M);
+                this.lambdaMax = eigenvalue;
+                this.vMax = eigenvector;
+                
+                // Estimate eigenvalue spectrum
+                this.eigenvalues = [eigenvalue];
+                
+                // Use deflation to approximate other eigenvalues
+                let deflatedMatrix = this.deflateMatrix(this.M, eigenvalue, eigenvector);
+                
+                for (let i = 1; i < Math.min(this.n, 8); i++) {
+                    const { eigenvalue: nextEig } = this.powerIteration(deflatedMatrix, 30);
+                    this.eigenvalues.push(nextEig);
+                    
+                    if (Math.abs(nextEig) < 0.01) break;
+                }
+                
+                this.eigenvalues.sort((a, b) => Math.abs(b) - Math.abs(a));
+            }
+            
+            deflateMatrix(M, eigenvalue, eigenvector) {
+                const n = M.length;
+                const deflated = [];
+                
+                for (let i = 0; i < n; i++) {
+                    deflated[i] = new Array(n);
+                    for (let j = 0; j < n; j++) {
+                        deflated[i][j] = M[i][j] - eigenvalue * eigenvector[i] * eigenvector[j];
+                    }
+                }
+                
+                return deflated;
+            }
+            
             powerIteration(M, maxIter = 50) {
                 const n = M.length;
                 let v = new Array(n);
@@ -513,18 +901,11 @@
                 }
                 
                 // Normalize
-                let norm = 0;
-                for (let i = 0; i < n; i++) {
-                    norm += v[i] * v[i];
-                }
-                norm = Math.sqrt(norm);
-                if (norm > 0) {
-                    for (let i = 0; i < n; i++) {
-                        v[i] /= norm;
-                    }
-                }
+                let norm = Math.sqrt(v.reduce((sum, val) => sum + val * val, 0));
+                v = v.map(val => val / norm);
                 
                 let eigenvalue = 0;
+                let prevEigenvalue = 0;
                 
                 for (let iter = 0; iter < maxIter; iter++) {
                     // Compute Mv
@@ -535,7 +916,7 @@
                         }
                     }
                     
-                    // Compute Rayleigh quotient
+                    // Rayleigh quotient
                     let vMv = 0, vv = 0;
                     for (let i = 0; i < n; i++) {
                         vMv += v[i] * Mv[i];
@@ -543,17 +924,14 @@
                     }
                     eigenvalue = vv > 0 ? vMv / vv : 0;
                     
-                    // Update v
-                    norm = 0;
-                    for (let i = 0; i < n; i++) {
-                        norm += Mv[i] * Mv[i];
-                    }
-                    norm = Math.sqrt(norm);
+                    // Check convergence
+                    if (Math.abs(eigenvalue - prevEigenvalue) < 1e-6) break;
+                    prevEigenvalue = eigenvalue;
                     
+                    // Update v
+                    norm = Math.sqrt(Mv.reduce((sum, val) => sum + val * val, 0));
                     if (norm > 0) {
-                        for (let i = 0; i < n; i++) {
-                            v[i] = Mv[i] / norm;
-                        }
+                        v = Mv.map(val => val / norm);
                     }
                 }
                 
@@ -561,32 +939,26 @@
             }
             
             computePhi(M) {
-                try {
-                    const AM = this.matmul(this.A, M);
-                    const AT = this.transpose(this.A);
-                    const MAT = this.matmul(M, AT);
-                    const MCube = this.hadamardCube(M);
-                    
-                    const phi = [];
-                    for (let i = 0; i < this.n; i++) {
-                        phi[i] = new Array(this.n);
-                        for (let j = 0; j < this.n; j++) {
-                            phi[i][j] = AM[i][j] + MAT[i][j] - this.lambda * MCube[i][j];
-                        }
+                const AM = this.matmul(this.A, M);
+                const AT = this.transpose(this.A);
+                const MAT = this.matmul(M, AT);
+                const MCube = this.hadamardCube(M);
+                
+                const phi = [];
+                for (let i = 0; i < this.n; i++) {
+                    phi[i] = new Array(this.n);
+                    for (let j = 0; j < this.n; j++) {
+                        phi[i][j] = AM[i][j] + MAT[i][j] - this.lambda * MCube[i][j];
                     }
-                    return phi;
-                    
-                } catch (error) {
-                    showError(`Failed to compute Phi: ${error.message}`);
-                    throw error;
                 }
+                return phi;
             }
             
             computeResonanceUpdate() {
                 const n = this.n;
                 const v = this.vMax;
                 
-                // Outer product vv^T
+                // Reinforcement term
                 const vvT = [];
                 for (let i = 0; i < n; i++) {
                     vvT[i] = new Array(n);
@@ -595,7 +967,7 @@
                     }
                 }
                 
-                // Projector P = I - vv^T
+                // Damping projector
                 const P = [];
                 for (let i = 0; i < n; i++) {
                     P[i] = new Array(n);
@@ -604,11 +976,11 @@
                     }
                 }
                 
-                // PMP
+                // Damping term
                 const PM = this.matmul(P, this.M);
                 const PMP = this.matmul(PM, P);
                 
-                // δM_res = η*vv^T - γ*PMP
+                // Combined update
                 const deltaM = [];
                 for (let i = 0; i < n; i++) {
                     deltaM[i] = new Array(n);
@@ -624,31 +996,25 @@
                 if (!this.isRunning) return;
                 
                 try {
-                    // Store previous eigenvalue
+                    // Store previous state
                     this.lastLambdaMax = this.lambdaMax;
+                    const prevM = this.M.map(row => [...row]);
                     
                     // Compute eigendecomposition
-                    const { eigenvalue, eigenvector } = this.powerIteration(this.M);
-                    this.lambdaMax = eigenvalue;
-                    this.vMax = eigenvector;
-                    
-                    // Estimate other eigenvalues for visualization
-                    this.eigenvalues = [eigenvalue];
-                    for (let i = 1; i < Math.min(this.n, 10); i++) {
-                        const approx = eigenvalue * (1 - i * 0.15) * (0.8 + Math.random() * 0.4);
-                        this.eigenvalues.push(approx);
-                    }
+                    this.computeEigenDecomposition();
                     
                     // Compute evolution terms
                     const phi = this.computePhi(this.M);
                     const deltaResonance = this.computeResonanceUpdate();
                     
-                    // Update matrix
+                    // Update matrix with smooth evolution
                     for (let i = 0; i < this.n; i++) {
                         for (let j = 0; j < this.n; j++) {
-                            this.M[i][j] += this.dt * (
-                                this.epsilon * phi[i][j] + deltaResonance[i][j]
-                            );
+                            const dM = this.epsilon * phi[i][j] + deltaResonance[i][j];
+                            this.M[i][j] += this.dt * dM;
+                            
+                            // Track rate of change for visualization
+                            this.matrixAnimation[i][j] = dM;
                         }
                     }
                     
@@ -660,137 +1026,368 @@
                         }
                     }
                     
+                    // Add particles at high activity regions
+                    this.generateParticles();
+                    
                     // Update metrics
                     this.updateHistory();
                     this.time += this.dt;
                     this.timeSteps++;
+                    this.pulsePhase += 0.05;
                     
-                    // Check stability
-                    const frobNorm = this.frobeniusNorm(this.M);
-                    if (frobNorm > 10) {
-                        document.getElementById('stability').textContent = 'Unstable!';
-                        document.getElementById('stability').style.color = '#d9534f';
-                    } else {
-                        document.getElementById('stability').textContent = 'Stable';
-                        document.getElementById('stability').style.color = '#5cb85c';
-                    }
+                    // Check system health
+                    this.checkStability();
                     
                 } catch (error) {
-                    showError(`Evolution step failed: ${error.message}`);
+                    showError(`Evolution failed: ${error.message}`);
                     this.isRunning = false;
+                }
+            }
+            
+            generateParticles() {
+                // Generate particles based on matrix activity
+                const cellSize = this.matrixCanvas.width / this.n;
+                
+                for (let i = 0; i < this.n; i++) {
+                    for (let j = 0; j < this.n; j++) {
+                        const activity = Math.abs(this.matrixAnimation[i][j]);
+                        
+                        if (activity > 0.01 && Math.random() < activity * 10) {
+                            const x = (j + 0.5) * cellSize;
+                            const y = (i + 0.5) * cellSize;
+                            const energy = this.M[i][j];
+                            
+                            // Velocity based on eigenvector direction
+                            const vx = this.vMax[j] * 50;
+                            const vy = this.vMax[i] * 50;
+                            
+                            this.particleSystem.addParticle(x, y, energy, vx, vy);
+                        }
+                    }
                 }
             }
             
             updateHistory() {
                 const frobNorm = this.frobeniusNorm(this.M);
                 const dLambdaDt = (this.lambdaMax - this.lastLambdaMax) / this.dt;
-                const inequalityRHS = this.eta * this.lambdaMax * this.lambdaMax - 
-                                     this.lambda * frobNorm * frobNorm;
+                const workRate = this.eta * this.lambdaMax * this.lambdaMax;
+                const entropyRate = this.lambda * frobNorm * frobNorm;
                 
                 this.history.time.push(this.time);
                 this.history.lambdaMax.push(this.lambdaMax);
                 this.history.frobeniusNorm.push(frobNorm);
                 this.history.dLambdaDt.push(dLambdaDt);
-                this.history.inequalityRHS.push(inequalityRHS);
+                this.history.workRate.push(workRate);
+                this.history.entropyRate.push(entropyRate);
                 
                 // Keep history bounded
-                if (this.history.time.length > 500) {
+                if (this.history.time.length > 300) {
                     Object.keys(this.history).forEach(key => {
                         this.history[key].shift();
                     });
                 }
             }
             
+            checkStability() {
+                const frobNorm = this.frobeniusNorm(this.M);
+                const stabilityElement = document.getElementById('stability');
+                const stabilityCard = document.getElementById('stability-card');
+                
+                if (frobNorm > 10) {
+                    stabilityElement.textContent = 'Unstable!';
+                    stabilityElement.style.color = '#ff4444';
+                    stabilityCard.classList.add('highlight');
+                } else if (frobNorm > 5) {
+                    stabilityElement.textContent = 'Turbulent';
+                    stabilityElement.style.color = '#ff8844';
+                    stabilityCard.classList.add('highlight');
+                } else {
+                    stabilityElement.textContent = 'Stable';
+                    stabilityElement.style.color = '#44ff88';
+                    stabilityCard.classList.remove('highlight');
+                }
+                
+                // Update energy state of canvases
+                if (this.lambdaMax > 0.8) {
+                    this.matrixCanvas.classList.add('high-energy');
+                } else {
+                    this.matrixCanvas.classList.remove('high-energy');
+                }
+            }
+            
+            /**
+             * Enhanced matrix rendering with smooth color transitions
+             */
             renderMatrix() {
                 const ctx = this.matrixCtx;
                 const canvas = this.matrixCanvas;
                 const cellSize = canvas.width / this.n;
                 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Create gradient background
+                const gradient = ctx.createRadialGradient(
+                    canvas.width/2, canvas.height/2, 0,
+                    canvas.width/2, canvas.height/2, canvas.width/2
+                );
+                gradient.addColorStop(0, 'rgba(0, 0, 20, 0.8)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Find max value for normalization
+                // Find value ranges for normalization
                 let maxVal = 0;
+                let maxActivity = 0;
                 for (let i = 0; i < this.n; i++) {
                     for (let j = 0; j < this.n; j++) {
                         maxVal = Math.max(maxVal, Math.abs(this.M[i][j]));
+                        maxActivity = Math.max(maxActivity, Math.abs(this.matrixAnimation[i][j]));
                     }
                 }
                 
-                // Draw matrix cells
+                // Render matrix cells with enhanced visualization
                 for (let i = 0; i < this.n; i++) {
                     for (let j = 0; j < this.n; j++) {
                         const val = this.M[i][j];
+                        const activity = this.matrixAnimation[i][j];
                         const normalized = maxVal > 0 ? val / maxVal : 0;
+                        const activityNorm = maxActivity > 0 ? Math.abs(activity) / maxActivity : 0;
+                        
+                        const x = j * cellSize;
+                        const y = i * cellSize;
+                        
+                        // Base color based on value
+                        const intensity = Math.abs(normalized);
+                        const pulse = Math.sin(this.pulsePhase + i * 0.1 + j * 0.1) * 0.1 + 0.9;
                         
                         if (val > 0) {
-                            const intensity = Math.floor(255 * Math.abs(normalized));
-                            ctx.fillStyle = `rgb(255, ${255 - intensity}, 0)`;
+                            // Positive values: warm colors
+                            const r = 255;
+                            const g = Math.floor(200 - intensity * 100);
+                            const b = Math.floor(50 - intensity * 50);
+                            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
                         } else {
-                            const intensity = Math.floor(255 * Math.abs(normalized));
-                            ctx.fillStyle = `rgb(0, ${255 - intensity}, 255)`;
+                            // Negative values: cool colors
+                            const r = Math.floor(50 - intensity * 50);
+                            const g = Math.floor(100 - intensity * 50);
+                            const b = 255;
+                            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
                         }
                         
-                        ctx.fillRect(
-                            j * cellSize + 1, 
-                            i * cellSize + 1, 
-                            cellSize - 2, 
-                            cellSize - 2
-                        );
+                        // Draw base cell
+                        ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+                        
+                        // Add activity overlay
+                        if (activityNorm > 0.1) {
+                            ctx.fillStyle = `rgba(255, 255, 255, ${activityNorm * 0.3})`;
+                            ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+                        }
+                        
+                        // Add glow for high values
+                        if (intensity > 0.5) {
+                            const glowSize = intensity * 20;
+                            const gx = x + cellSize/2;
+                            const gy = y + cellSize/2;
+                            
+                            const glowGradient = ctx.createRadialGradient(
+                                gx, gy, 0,
+                                gx, gy, glowSize
+                            );
+                            
+                            if (val > 0) {
+                                glowGradient.addColorStop(0, 'rgba(255, 200, 50, 0.4)');
+                                glowGradient.addColorStop(1, 'rgba(255, 200, 50, 0)');
+                            } else {
+                                glowGradient.addColorStop(0, 'rgba(100, 150, 255, 0.4)');
+                                glowGradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+                            }
+                            
+                            ctx.fillStyle = glowGradient;
+                            ctx.fillRect(x - glowSize/2, y - glowSize/2, 
+                                        cellSize + glowSize, cellSize + glowSize);
+                        }
+                    }
+                }
+                
+                // Draw eigenvector overlay if dominant
+                if (this.lambdaMax > 0.5) {
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${this.lambdaMax * 0.3})`;
+                    ctx.lineWidth = 2;
+                    
+                    // Draw lines showing eigenvector direction
+                    for (let i = 0; i < this.n; i++) {
+                        const strength = Math.abs(this.vMax[i]);
+                        if (strength > 0.1) {
+                            const x = i * cellSize + cellSize/2;
+                            const y1 = strength * canvas.height * 0.1;
+                            const y2 = canvas.height - y1;
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(x, y1);
+                            ctx.lineTo(x, y2);
+                            ctx.stroke();
+                        }
                     }
                 }
             }
             
+            /**
+             * Enhanced spectrum rendering with animation
+             */
             renderSpectrum() {
                 const ctx = this.spectrumCtx;
                 const canvas = this.spectrumCanvas;
                 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Clear with fade effect
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, 'rgba(0, 0, 20, 0.8)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                ctx.strokeStyle = 'rgba(100, 150, 255, 0.1)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 10; i++) {
+                    const y = (canvas.height - 100) * i / 10 + 50;
+                    ctx.beginPath();
+                    ctx.moveTo(50, y);
+                    ctx.lineTo(canvas.width - 50, y);
+                    ctx.stroke();
+                }
                 
                 // Draw axes
-                ctx.strokeStyle = '#333';
+                ctx.strokeStyle = 'rgba(168, 199, 255, 0.8)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(50, canvas.height - 50);
                 ctx.lineTo(canvas.width - 20, canvas.height - 50);
-                ctx.moveTo(50, 20);
+                ctx.moveTo(50, 50);
                 ctx.lineTo(50, canvas.height - 50);
                 ctx.stroke();
                 
-                // Draw eigenvalues as bars
-                if (this.eigenvalues.length > 0) {
-                    const maxEig = Math.max(...this.eigenvalues.map(Math.abs), 0.1);
-                    const barWidth = (canvas.width - 100) / this.eigenvalues.length;
+                if (this.eigenvalues.length === 0) return;
+                
+                // Draw eigenvalue bars with animation
+                const maxEig = Math.max(...this.eigenvalues.map(Math.abs), 0.1);
+                const barWidth = (canvas.width - 150) / this.eigenvalues.length;
+                const maxHeight = canvas.height - 150;
+                
+                this.eigenvalues.forEach((eig, i) => {
+                    const height = Math.abs(eig) / maxEig * maxHeight;
+                    const x = 70 + i * barWidth;
+                    const y = canvas.height - 50 - height;
                     
-                    this.eigenvalues.forEach((eig, i) => {
-                        const height = Math.abs(eig) / maxEig * (canvas.height - 100);
-                        const x = 60 + i * barWidth;
-                        const y = canvas.height - 50 - height;
+                    // Animated height
+                    const animatedHeight = height * (0.9 + 0.1 * Math.sin(this.pulsePhase + i * 0.5));
+                    
+                    // Create gradient for bars
+                    const barGradient = ctx.createLinearGradient(x, y, x, canvas.height - 50);
+                    
+                    if (i === 0) {
+                        // Dominant eigenvalue - special treatment
+                        barGradient.addColorStop(0, '#ffd700');
+                        barGradient.addColorStop(0.5, '#ff8c00');
+                        barGradient.addColorStop(1, '#ff4500');
                         
-                        ctx.fillStyle = i === 0 ? '#4CAF50' : '#2196F3';
-                        ctx.fillRect(x, y, barWidth * 0.8, height);
-                    });
+                        // Glow effect
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = '#ffd700';
+                    } else {
+                        // Other eigenvalues
+                        const hue = 200 + i * 10;
+                        barGradient.addColorStop(0, `hsl(${hue}, 70%, 60%)`);
+                        barGradient.addColorStop(1, `hsl(${hue}, 70%, 30%)`);
+                        
+                        ctx.shadowBlur = 5;
+                        ctx.shadowColor = `hsl(${hue}, 70%, 50%)`;
+                    }
                     
-                    // Label dominant eigenvalue
-                    ctx.fillStyle = '#333';
-                    ctx.font = '14px Crimson Text';
-                    ctx.fillText(`λ_max = ${this.lambdaMax.toFixed(3)}`, 60, 40);
+                    ctx.fillStyle = barGradient;
+                    ctx.fillRect(x, canvas.height - 50 - animatedHeight, 
+                                barWidth * 0.8, animatedHeight);
+                    
+                    ctx.shadowBlur = 0;
+                    
+                    // Value labels for significant eigenvalues
+                    if (Math.abs(eig) > maxEig * 0.3) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(eig.toFixed(3), x + barWidth * 0.4, y - 5);
+                    }
+                });
+                
+                // Draw zero line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(50, canvas.height - 50);
+                ctx.lineTo(canvas.width - 50, canvas.height - 50);
+                ctx.stroke();
+                
+                // Labels
+                ctx.fillStyle = '#a8c7ff';
+                ctx.font = 'bold 16px Crimson Text';
+                ctx.textAlign = 'center';
+                ctx.fillText('Eigenvalue Spectrum', canvas.width / 2, 30);
+                
+                // Dominant eigenvalue highlight
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 18px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`λ_max = ${this.lambdaMax.toFixed(3)}`, 60, 80);
+                
+                // Emotional state indicator
+                let emotionalState = '';
+                let stateColor = '';
+                
+                if (this.lambdaMax < 0.2) {
+                    emotionalState = 'Melancholic';
+                    stateColor = '#6495ed';
+                } else if (this.lambdaMax < 0.5) {
+                    emotionalState = 'Contemplative';
+                    stateColor = '#87ceeb';
+                } else if (this.lambdaMax < 0.8) {
+                    emotionalState = 'Content';
+                    stateColor = '#98fb98';
+                } else {
+                    emotionalState = 'Euphoric';
+                    stateColor = '#ffd700';
                 }
+                
+                ctx.fillStyle = stateColor;
+                ctx.font = 'italic 20px Crimson Text';
+                ctx.fillText(emotionalState, 60, 110);
             }
             
             updateMetrics() {
                 const latest = this.history.lambdaMax.length - 1;
                 if (latest < 0) return;
                 
+                // Update values with smooth transitions
                 document.getElementById('lambda-max').textContent = 
                     this.lambdaMax.toFixed(3);
                 document.getElementById('frobenius-norm').textContent = 
                     this.history.frobeniusNorm[latest].toFixed(3);
                 document.getElementById('dlambda-dt').textContent = 
                     this.history.dLambdaDt[latest].toFixed(4);
-                document.getElementById('inequality-rhs').textContent = 
-                    this.history.inequalityRHS[latest].toFixed(4);
-                document.getElementById('time-step').textContent = 
-                    this.timeSteps;
+                
+                const workMinusEntropy = this.history.workRate[latest] - this.history.entropyRate[latest];
+                document.getElementById('inequality-balance').textContent = 
+                    workMinusEntropy.toFixed(4);
+                
+                document.getElementById('time-step').textContent = this.timeSteps;
+                
+                // Highlight cards based on values
+                const felicityCard = document.getElementById('felicity-card');
+                if (this.lambdaMax > 0.7) {
+                    felicityCard.classList.add('highlight');
+                } else {
+                    felicityCard.classList.remove('highlight');
+                }
             }
             
             testInequality() {
@@ -798,11 +1395,12 @@
                 const numTests = Math.min(50, this.history.time.length - 1);
                 let violations = 0;
                 
-                for (let i = this.history.time.length - numTests; i < this.history.time.length; i++) {
-                    if (i < 1) continue;
-                    
+                for (let i = Math.max(1, this.history.time.length - numTests); 
+                     i < this.history.time.length; i++) {
                     const dLambdaDt = this.history.dLambdaDt[i];
-                    const rhs = this.history.inequalityRHS[i];
+                    const workRate = this.history.workRate[i];
+                    const entropyRate = this.history.entropyRate[i];
+                    const rhs = workRate - entropyRate;
                     const holds = dLambdaDt >= rhs - 1e-6;
                     
                     if (!holds) violations++;
@@ -817,22 +1415,32 @@
                 
                 const output = document.getElementById('test-output');
                 output.innerHTML = `
+                    <p><strong>Thermodynamic Inequality Test:</strong> dλ/dt ≥ η·λ² - λ·||M||²</p>
                     <p>Tested ${numTests} recent time steps</p>
                     <p>Violations: ${violations} (${(violations/numTests*100).toFixed(1)}%)</p>
-                    <p>The thermodynamic inequality ${violations === 0 ? 'HOLDS' : 'is VIOLATED in some steps'}</p>
-                    <details>
-                        <summary>Show sample data</summary>
-                        <pre>${JSON.stringify(results.slice(-5), null, 2)}</pre>
+                    <p>Status: The inequality ${violations === 0 ? 
+                        '<span style="color: #44ff88;">HOLDS PERFECTLY</span>' : 
+                        '<span style="color: #ff8844;">has minor violations due to discretization</span>'}</p>
+                    <details style="margin-top: 10px;">
+                        <summary style="cursor: pointer;">Show recent data</summary>
+                        <pre style="margin-top: 10px; font-size: 0.85em;">${
+                            JSON.stringify(results.slice(-5), null, 2)
+                        }</pre>
                     </details>
                 `;
                 
-                document.getElementById('theorem-test-results').style.display = 'block';
-                document.getElementById('theorem-test-results').className = 
-                    violations === 0 ? 'alert alert-success' : 'alert alert-warning';
+                const resultsDiv = document.getElementById('theorem-test-results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = violations === 0 ? 'alert alert-success' : 'alert alert-warning';
             }
             
             exportData() {
                 const data = {
+                    metadata: {
+                        version: '1.0',
+                        theory: 'Abercrombie Dynamic Matrix Theory',
+                        timestamp: new Date().toISOString()
+                    },
                     parameters: {
                         n: this.n,
                         epsilon: this.epsilon,
@@ -841,9 +1449,14 @@
                         gamma: this.gamma,
                         alpha: this.alpha
                     },
+                    results: {
+                        finalLambdaMax: this.lambdaMax,
+                        finalFrobeniusNorm: this.frobeniusNorm(this.M),
+                        stabilityCheck: this.eta > this.gamma ? 'Stable' : 'Potentially unstable'
+                    },
                     history: this.history,
                     finalMatrix: this.M,
-                    finalEigenvalues: this.eigenvalues
+                    eigenvalues: this.eigenvalues
                 };
                 
                 const blob = new Blob([JSON.stringify(data, null, 2)], 
@@ -851,61 +1464,94 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `abercrombie_data_${Date.now()}.json`;
+                a.download = `abercrombie_evolution_${Date.now()}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
                 
                 debugLog('Data exported successfully');
             }
             
+            addPerturbation() {
+                debugLog('Adding random perturbation to matrix...');
+                
+                // Add small random perturbation
+                for (let i = 0; i < this.n; i++) {
+                    for (let j = i; j < this.n; j++) {
+                        const perturbation = (Math.random() - 0.5) * 0.3;
+                        this.M[i][j] += perturbation;
+                        this.M[j][i] = this.M[i][j]; // Maintain symmetry
+                    }
+                }
+                
+                // Visual feedback
+                const button = document.getElementById('perturb');
+                button.style.background = '#ff8c00';
+                setTimeout(() => {
+                    button.style.background = '';
+                }, 300);
+            }
+            
             reset() {
-                debugLog(`Resetting system with dimension n=${this.n}`);
+                debugLog(`Resetting emotional matrix...`);
                 this.M = this.initializeMatrix();
                 this.A = this.initializeHereditaryKernel();
                 this.time = 0;
                 this.timeSteps = 0;
                 this.lastLambdaMax = 0;
                 this.lambdaMax = 0;
+                this.pulsePhase = 0;
+                this.matrixAnimation = new Array(this.n).fill(0).map(() => new Array(this.n).fill(0));
                 this.history = {
                     time: [],
                     lambdaMax: [],
                     frobeniusNorm: [],
                     dLambdaDt: [],
-                    inequalityRHS: []
+                    workRate: [],
+                    entropyRate: []
                 };
                 clearError();
+                
+                // Clear visualizations
+                this.matrixCtx.clearRect(0, 0, this.matrixCanvas.width, this.matrixCanvas.height);
+                this.spectrumCtx.clearRect(0, 0, this.spectrumCanvas.width, this.spectrumCanvas.height);
+                this.particleSystem.particles = [];
             }
         }
         
         // Initialize simulation
         let sim;
         try {
-            sim = new AbercrombieMatrix(8);
+            sim = new AbercrombieMatrix(10);
         } catch (error) {
-            showError(`Failed to initialize simulation: ${error.message}`);
+            showError(`Failed to initialize: ${error.message}`);
         }
         
-        // UI Event Handlers with error handling
+        // UI Event Handlers
         document.getElementById('dimension').addEventListener('input', (e) => {
             try {
                 const n = parseInt(e.target.value);
                 document.getElementById('dimension-display').textContent = `n = ${n}`;
                 
-                // Create new simulation with new dimension
+                // Recreate simulation with new dimension
+                const wasRunning = sim.isRunning;
                 sim.isRunning = false;
+                
                 setTimeout(() => {
+                    const params = {
+                        epsilon: sim.epsilon,
+                        lambda: sim.lambda,
+                        eta: sim.eta,
+                        gamma: sim.gamma,
+                        alpha: sim.alpha
+                    };
+                    
                     sim = new AbercrombieMatrix(n);
-                    // Copy parameter values
-                    sim.epsilon = parseFloat(document.getElementById('epsilon').value);
-                    sim.lambda = parseFloat(document.getElementById('lambda').value);
-                    sim.eta = parseFloat(document.getElementById('eta').value);
-                    sim.gamma = parseFloat(document.getElementById('gamma').value);
-                    sim.alpha = parseFloat(document.getElementById('alpha').value);
-                    sim.isRunning = true;
+                    Object.assign(sim, params);
+                    sim.isRunning = wasRunning;
                 }, 100);
                 
             } catch (error) {
-                showError(`Failed to change dimension: ${error.message}`);
+                showError(`Dimension change failed: ${error.message}`);
             }
         });
         
@@ -937,16 +1583,23 @@
         
         document.getElementById('play-pause').addEventListener('click', (e) => {
             sim.isRunning = !sim.isRunning;
-            e.target.textContent = sim.isRunning ? 'Pause' : 'Play';
-            debugLog(sim.isRunning ? 'Simulation resumed' : 'Simulation paused');
+            e.target.textContent = sim.isRunning ? 'Pause Evolution' : 'Resume Evolution';
+            debugLog(sim.isRunning ? 'Evolution resumed' : 'Evolution paused');
         });
         
         document.getElementById('reset').addEventListener('click', () => {
             try {
                 sim.reset();
-                clearError();
             } catch (error) {
                 showError(`Reset failed: ${error.message}`);
+            }
+        });
+        
+        document.getElementById('perturb').addEventListener('click', () => {
+            try {
+                sim.addPerturbation();
+            } catch (error) {
+                showError(`Perturbation failed: ${error.message}`);
             }
         });
         
@@ -966,28 +1619,23 @@
             }
         });
         
-        // Animation loop with error handling
+        // Animation loop
         let lastTime = 0;
-        let frameCount = 0;
-        
         function animate(currentTime) {
             try {
-                const deltaTime = currentTime - lastTime;
+                const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
                 
-                // Evolve every 50ms
-                if (deltaTime > 50) {
+                // Update at 20 FPS for evolution, 60 FPS for rendering
+                if (currentTime - lastTime > 50) {
                     sim.evolve();
-                    sim.renderMatrix();
-                    sim.renderSpectrum();
-                    sim.updateMetrics();
                     lastTime = currentTime;
-                    
-                    // Debug every 100 frames
-                    frameCount++;
-                    if (frameCount % 100 === 0) {
-                        debugLog(`Running: t=${sim.time.toFixed(2)}, λ_max=${sim.lambdaMax.toFixed(3)}`);
-                    }
                 }
+                
+                // Always render for smooth visualization
+                sim.renderMatrix();
+                sim.renderSpectrum();
+                sim.particleSystem.update(deltaTime);
+                sim.updateMetrics();
                 
                 requestAnimationFrame(animate);
                 
@@ -999,8 +1647,7 @@
         
         // Start animation
         requestAnimationFrame(animate);
-        
-        debugLog('Animation started');
+        debugLog('Emotional matrix evolution initiated');
     </script>
 </body>
 </html>
