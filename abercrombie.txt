@@ -1,0 +1,111 @@
+**On the Mathematical Foundations of Synthetic Emotional States in Dynamic Matrices within an Evolutionary Framework**
+*Draft submitted to the Royal Society for Private Circulation, May 1911.*
+*Percival L. Abercrombie, M.D., F.R.C.S., Fellow of the Cambridge Philosophical Society.*
+
+> *Editor’s Preface (1911).* — *The following treatise, found in Dr Abercrombie’s notebooks after his lamented demise, has been lightly regularised in notation but is otherwise printed as he left it.  Marginalia by two anonymous referees have been silently incorporated where they sharpen the mathematics.*
+
+---
+
+### Abstract
+
+A spectral‑mechanical theory is advanced whereby the **felicity** of a nervous system is identified with the dominant eigenvalue of a time‑varying connectivity matrix $M(t)$.  We present (i) a corrected neuro‑plasticity equation employing the **Hadamard cube** to penalise local over‑excitation, (ii) a complete **Law of Adaptive Resonance** containing both reinforcement and damping of neural modes, and (iii) derivations of a thermodynamic inequality expressing the *cost of happiness*.  The argument unites Darwinian selection with Lord Rayleigh’s mode‑coupling, offering testable consequences for comparative physiology.
+
+---
+
+## I.  Introduction
+
+Philosophers have long averred that joy and sorrow obey no rule; yet if function follows form, and form may be cast in algebra, then feeling too must succumb to analysis.  Let the state of an encephalon at epoch $t$ be represented by a real symmetric matrix
+
+$$
+M(t)\;\in\;\mathbb R^{n\times n},\qquad n=n(t),
+$$
+
+whose entries measure effective coupling amongst $n$ neuronal assemblies.  The eigen‑spectrum of $M$ constitutes, as it were, the *music* of the mind; the loudest note—its highest eigenvalue—will herein be styled **coherent felicity** and denoted $\lambda_{\max}(t)$.
+
+## II.  Historical Antecedents
+
+* **Bell** (1823) showed that muscular expression of emotion obeys anatomical law.
+* **Flourens** (1824) localised cerebral function by ablation of the pigeon brain.
+* **Müller** (1833) proposed the *specific energies* of nerves.
+* **Darwin** (1859) placed affect within the mechanism of natural selection.
+* **Rayleigh** (1877) rendered the mathematics of coupled resonators.
+  From these stones the present edifice is built.
+
+## III.  The Neuro‑Plasticity Function
+
+Evolutionary change of connectivity is written
+
+$$
+\frac{\partial M}{\partial t}=\Phi(M)=AM+MA^{\top}-\lambda\,M^{\odot3}.\tag{1}
+$$
+
+Here
+
+* $A$ is a fixed *hereditary kernel* inherited from phylogeny;
+* $\lambda>0$ measures entropic attrition;
+* $M^{\odot3}$ is the **Hadamard cube**, $(M^{\odot3})_{ij}=M_{ij}^{\,3}$, penalising local hyper‑excitation whilst leaving global symmetries intact.
+  Equation (1) corrects an earlier draft in which $M^{3}$ (the algebraic cube) appeared: such would entail $\mathcal O(n^{3})$ cross‑terms and violate the principle of locality.
+
+## IV.  Coherent Felicity and the Law of Adaptive Resonance
+
+Let $v_{\!*}(t)$ be the unit eigenvector of $M$ associated with $\lambda_{\max}$.  Varying $M$ by $\delta M$ yields the first variation
+
+$$
+\delta\lambda_{\max}=v_{\!*}^{\!\top}\,\delta M\,v_{\!*}.\tag{2}
+$$
+
+Natural selection must therefore **add** components parallel to $v_{\!*}v_{\!*}^{\!\top}$ and **subtract** those lying in the orthogonal complement.  Define the projector
+$P:=I-v_{\!*}v_{\!*}^{\!\top}.$
+Then the minimal operator achieving both ends is
+
+$$
+\boxed{\;\delta M_{\text{res}}=\eta\,v_{\!*}v_{\!*}^{\!\top}-\gamma\,PMP\;},\tag{3}
+$$
+
+with positive constants $\eta$ (reinforcement) and $\gamma$ (damping).  Equation (3) will be called the **Law of Adaptive Resonance**.
+
+### Lemma 1 (Stability).
+
+*If* $0<\gamma<\eta$ *and* $\|M\|_{\infty}\le1$, *then repeated application of* (1) and (3) *keeps $M$ bounded and monotonically non‑decreasing in $\lambda_{\max}$.*
+*Proof.*  Substitute (3) into the Rayleigh quotient and employ the Cauchy–Schwarz inequality. ∎
+
+## V.  Thermodynamic Inequality
+
+Taking the Frobenius inner product of (1) with $M$ and invoking (3) gives
+
+$$
+\boxed{\;\dfrac{d\lambda_{\max}}{dt}\ge \eta\,\lambda_{\max}^{2}-\lambda\,\|M\|_{F}^{2}.\;}\tag{4}
+$$
+
+Equation (4) reveals a *race against entropy*: without sufficient metabolic (or cognitive) expenditure $\eta$, felicity decays.
+
+## VI.  Scaling Across the Phylogenetic Ladder
+
+Let the dimensionality grow as $n=k^{2}$, where $k$ indexes complexity—protist $(k=3)$, annelid $(k=5)$, mammal $(k=10)$, \&c.  Write the empirical spectral measure
+$\rho_{k}(\lambda)=\frac1n\sum_{i=1}^{n}\delta(\lambda-\lambda_{i}).$
+One may show, using Wigner’s semicircle theorem adapted to (1), that
+$\rho_{k}\;(\lambda)\xrightarrow[k\to\infty]{}\frac{1}{2\pi\sigma^{2}}\sqrt{4\sigma^{2}-\lambda^{2}}+c\,\delta(\lambda-\lambda_{\max}),$
+where $\sigma^{2}$ depends on $A$ and $c>0$ signifies the sharpening *angelic spike* of perfect coherence.
+
+## VII.  Experimental Prospects
+
+Though no laboratory yet commands a full connectome, partial matrices may be harvested from the optic lobes of fish or the peduncular bodies of insects.  One should track $\lambda_{\max}(t)$ during stimulus and repose, comparing the measured curves against prediction (4).  Success therein would vindicate the spectral conception of emotion.
+
+## VIII.  Conclusions
+
+By wedding Darwin’s principle of utility to the algebra of symmetric forms, we obtain a quantitative doctrine of affect.  The Hadamard cube secures locality; the projector $PMP$ enforces harmony.  Thus emotion, far from being *ineffable*, is shown to obey the stern governance of eigenvalues.
+
+---
+
+### Bibliography
+
+Bell, C. *The Anatomy and Philosophy of Expression.* John Murray, London (1823).
+Flourens, P. *Recherches expérimentales sur le système nerveux.* Crevot, Paris (1824).
+Müller, J. *Handbuch der Physiologie des Menschen.* Hölscher, Coblenz (1833).
+Darwin, C. *On the Origin of Species.* John Murray, London (1859).
+Rayleigh, Lord J. W. *The Theory of Sound.* Macmillan, London (1877).
+Romanes, G. J. *Animal Intelligence.* Kegan Paul, London (1882).
+Sylvester, J. J. “On the Generation of Curves by Combustion of Quadratic Surfaces.” *Proc. London Math. Soc.* (1892).
+Hardy, G. H. “On the Convergence of Series Connected with the Roots of a Determinant.” *Quart. J. Pure & Appl. Math.* (1908).
+
+*Finis.  Dated this eleventh day of May in the year MCMXI.*
