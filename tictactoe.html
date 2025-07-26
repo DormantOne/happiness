@@ -1,0 +1,1586 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe: Markov Chain Analysis & Interactive Gameplay</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        /* Game Board Styles */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+        
+        .cell {
+            background: #f0f0f0;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            font-size: 48px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .cell:hover:not(.occupied) {
+            background: #e0e0ff;
+            transform: scale(1.05);
+        }
+        
+        .cell.occupied {
+            cursor: not-allowed;
+        }
+        
+        .cell.x {
+            color: #4CAF50;
+        }
+        
+        .cell.o {
+            color: #f44336;
+        }
+        
+        .cell.winning {
+            background: #ffeb3b;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Control Styles */
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            outline: none;
+            border-radius: 20px;
+            transition: 0.2s;
+        }
+        
+        .slider:hover {
+            background: #ccc;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Visualization Styles */
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .convergence-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .probability-bars {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 200px;
+            margin: 20px 0;
+        }
+        
+        .prob-bar {
+            width: 80px;
+            background: #667eea;
+            border-radius: 10px 10px 0 0;
+            transition: height 0.5s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+        
+        .prob-bar.x-win {
+            background: #4CAF50;
+        }
+        
+        .prob-bar.o-win {
+            background: #f44336;
+        }
+        
+        .prob-bar.draw {
+            background: #ff9800;
+        }
+        
+        .prob-value {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .prob-label {
+            position: absolute;
+            bottom: -30px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        /* Statistics Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Info Messages */
+        .info-message {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Canvas for convergence visualization */
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Game mode selector */
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .mode-button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #f0f0f0;
+            color: #666;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-button.active {
+            background: #667eea;
+            color: white;
+            border-color: #5a67d8;
+        }
+        
+        /* Debug info */
+        .debug-info {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* Real computation indicator */
+        .computation-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .state-count {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Tic-Tac-Toe: Real Markov Chain Eigenanalysis & Interactive Gameplay</h1>
+            <p>Computing exact stationary distribution over all 5,478 game states using power iteration</p>
+        </div>
+        
+        <div class="content-grid">
+            <!-- Analysis Panel -->
+            <div class="panel">
+                <h2>📊 Real-Time Markov Chain Analysis <span class="computation-indicator" id="computation-indicator" style="display: none;"></span></h2>
+                
+                <div class="control-group">
+                    <label for="o-strategy">O's Strategy Mix:</label>
+                    <input type="range" id="o-random" class="slider" min="0" max="100" value="100">
+                    <span class="slider-value" id="o-random-value">100%</span> Random
+                    <br>
+                    <input type="range" id="o-defensive" class="slider" min="0" max="100" value="0">
+                    <span class="slider-value" id="o-defensive-value">0%</span> Defensive
+                    <small style="display: block; margin-top: 5px; color: #666;">
+                        Note: Defensive strategy blocks opponent wins when possible
+                    </small>
+                </div>
+                
+                <div class="control-group">
+                    <label for="convergence-tolerance">Convergence Tolerance:</label>
+                    <input type="range" id="convergence-tolerance" class="slider" min="-16" max="-6" value="-12">
+                    <span class="slider-value" id="tolerance-value">1e-12</span>
+                </div>
+                
+                <div class="control-group">
+                    <button id="run-analysis" onclick="runMarkovAnalysis()">Run Real Analysis</button>
+                    <button id="reset-analysis" onclick="resetAnalysis()">Reset</button>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="convergence-chart"></canvas>
+                </div>
+                
+                <div class="probability-bars">
+                    <div class="prob-bar x-win" style="height: 0%">
+                        <span class="prob-value">0%</span>
+                        <span class="prob-label">X Wins</span>
+                    </div>
+                    <div class="prob-bar o-win" style="height: 0%">
+                        <span class="prob-value">0%</span>
+                        <span class="prob-label">O Wins</span>
+                    </div>
+                    <div class="prob-bar draw" style="height: 0%">
+                        <span class="prob-value">0%</span>
+                        <span class="prob-label">Draw</span>
+                    </div>
+                </div>
+                
+                <div id="analysis-status" class="info-message">
+                    Ready to analyze. Click "Run Real Analysis" to start eigenvalue computation.
+                </div>
+                
+                <div class="state-count" id="state-count"></div>
+            </div>
+            
+            <!-- Game Board Panel -->
+            <div class="panel">
+                <h2>🎮 Play Against AI</h2>
+                
+                <div class="mode-selector">
+                    <button class="mode-button active" onclick="setGameMode('optimal')">vs Optimal AI</button>
+                    <button class="mode-button" onclick="setGameMode('random')">vs Random AI</button>
+                </div>
+                
+                <div class="game-board" id="game-board">
+                    <!-- Board cells will be generated by JavaScript -->
+                </div>
+                
+                <div class="control-group" style="text-align: center;">
+                    <button onclick="resetGame()">New Game</button>
+                    <button onclick="showHint()" id="hint-button">Show Best Move</button>
+                </div>
+                
+                <div id="game-status" class="info-message">
+                    You play as O (Red). X (Green) moves first.
+                </div>
+                
+                <div class="debug-info hidden" id="debug-info">
+                    <!-- Debug information will appear here -->
+                </div>
+            </div>
+            
+            <!-- Statistics Panel -->
+            <div class="panel">
+                <h2>📈 Performance Statistics</h2>
+                
+                <h3>Your Performance</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="player-wins">0</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="player-losses">0</div>
+                        <div class="stat-label">Losses</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="player-draws">0</div>
+                        <div class="stat-label">Draws</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="player-winrate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+                
+                <h3>Random O Performance (Theoretical)</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="random-winrate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="random-drawrate">0%</div>
+                        <div class="stat-label">Draw Rate</div>
+                    </div>
+                </div>
+                
+                <div class="info-message">
+                    <strong>Comparison:</strong> Your win rate vs the theoretical random player win rate shows how well you're doing!
+                </div>
+                
+                <button onclick="resetStats()">Reset Statistics</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Web Worker Script Content -->
+    <script id="worker-script" type="javascript/worker">
+        // eigen_worker.js - runs off the main thread for real computation
+        /* eslint-disable no-restricted-globals */
+
+        self.onmessage = ({data}) => {
+            const {randomMix, defensiveMix, tol} = data;
+            
+            // Step 1: Enumerate all legal game states
+            const {states, map} = enumerateStates();
+            self.postMessage({type: 'status', message: `Enumerated ${states.length} legal game states`});
+            
+            // Step 2: Build transition matrix based on strategy mix
+            const transitions = buildTransitions(states, map, randomMix, defensiveMix);
+            self.postMessage({type: 'status', message: 'Built transition matrix, starting power iteration...'});
+            
+            // Step 3: Power iteration to find stationary distribution
+            const N = states.length;
+            let v = new Float64Array(N).fill(1 / N);
+            let vNew = new Float64Array(N);
+            let err = 1, it = 0;
+            
+            while (err > tol && it < 10000) { // Safety limit on iterations
+                vNew.fill(0);
+                
+                // Matrix-vector multiplication: v_new = P^T * v
+                for (let i = 0; i < N; ++i) {
+                    for (const [j, p] of transitions[i]) {
+                        vNew[j] += p * v[i];
+                    }
+                }
+                
+                // L1-normalize and compute error
+                let sum = 0, diff = 0;
+                for (let k = 0; k < N; ++k) sum += vNew[k];
+                for (let k = 0; k < N; ++k) {
+                    vNew[k] /= sum;
+                    diff += Math.abs(vNew[k] - v[k]);
+                    v[k] = vNew[k];
+                }
+                err = diff;
+                it++;
+                
+                // Send update every 3 iterations for smooth UI updates
+                if (it % 3 === 0 || err <= tol) {
+                    self.postMessage(computeProgress(states, v, it, err, err <= tol));
+                }
+            }
+            
+            // Final result
+            if (it >= 10000) {
+                self.postMessage({type: 'error', message: 'Max iterations reached without convergence'});
+            }
+        };
+
+        // ---------- Helper Functions --------------------------------------------
+        
+        const WIN_LINES = [
+            [0,1,2], [3,4,5], [6,7,8],  // rows
+            [0,3,6], [1,4,7], [2,5,8],  // columns
+            [0,4,8], [2,4,6]            // diagonals
+        ];
+        
+        function winner(board) {
+            for (const [a, b, c] of WIN_LINES) {
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+            return 0;
+        }
+        
+        function getAvailableMoves(board) {
+            return board.map((v, i) => v === 0 ? i : null).filter(i => i !== null);
+        }
+        
+        function enumerateStates() {
+            const states = [];
+            const map = new Map();
+            
+            // DFS to enumerate all reachable states
+            const dfs = (board, player) => {
+                const key = board.join(',') + ',' + player;
+                if (map.has(key)) return;
+                
+                map.set(key, states.length);
+                states.push({board: [...board], player: player});
+                
+                // Terminal states don't have children
+                if (winner(board) || getAvailableMoves(board).length === 0) return;
+                
+                // Generate all child states
+                for (const move of getAvailableMoves(board)) {
+                    board[move] = player;
+                    dfs(board, -player);
+                    board[move] = 0;
+                }
+            };
+            
+            // Start enumeration from empty board with X to play
+            dfs(Array(9).fill(0), 1);
+            
+            return {states, map};
+        }
+        
+        function buildTransitions(states, map, randomMix, defensiveMix) {
+            const transitions = Array(states.length).fill(0).map(() => []);
+            
+            // Pre-compute minimax values for all states
+            const minimaxCache = new Map();
+            function minimax(board, player) {
+                const key = board.join(',') + ',' + player;
+                if (minimaxCache.has(key)) return minimaxCache.get(key);
+                
+                const w = winner(board);
+                if (w || getAvailableMoves(board).length === 0) {
+                    minimaxCache.set(key, w);
+                    return w;
+                }
+                
+                let best = player === 1 ? -2 : 2;
+                for (const move of getAvailableMoves(board)) {
+                    board[move] = player;
+                    const value = minimax(board, -player);
+                    board[move] = 0;
+                    
+                    if (player === 1) {
+                        best = Math.max(best, value);
+                        if (best === 1) break; // Alpha-beta pruning
+                    } else {
+                        best = Math.min(best, value);
+                        if (best === -1) break;
+                    }
+                }
+                
+                minimaxCache.set(key, best);
+                return best;
+            }
+            
+            // Pre-fill minimax cache
+            for (const state of states) {
+                minimax(state.board, state.player);
+            }
+            
+            // Build transition matrix
+            for (let i = 0; i < states.length; i++) {
+                const {board, player} = states[i];
+                
+                // Terminal states loop to themselves
+                if (winner(board) || getAvailableMoves(board).length === 0) {
+                    transitions[i].push([i, 1.0]);
+                    continue;
+                }
+                
+                if (player === 1) {
+                    // X plays optimally
+                    let bestValue = -2;
+                    let bestMoves = [];
+                    
+                    for (const move of getAvailableMoves(board)) {
+                        board[move] = 1;
+                        const value = minimax(board, -1);
+                        
+                        if (value > bestValue) {
+                            bestValue = value;
+                            bestMoves = [move];
+                        } else if (value === bestValue) {
+                            bestMoves.push(move);
+                        }
+                        
+                        board[move] = 0;
+                    }
+                    
+                    // Uniform distribution over optimal moves
+                    const prob = 1.0 / bestMoves.length;
+                    for (const move of bestMoves) {
+                        board[move] = 1;
+                        const childKey = board.join(',') + ',-1';
+                        const childIdx = map.get(childKey);
+                        transitions[i].push([childIdx, prob]);
+                        board[move] = 0;
+                    }
+                    
+                } else {
+                    // O plays with mixed strategy
+                    const moves = getAvailableMoves(board);
+                    const moveWeights = [];
+                    
+                    for (const move of moves) {
+                        let weight = randomMix;
+                        
+                        // Check if this move blocks X from winning
+                        board[move] = 1; // Temporarily place X
+                        if (winner(board) === 1) {
+                            // This move would let X win, so O should block it if defensive
+                            weight = randomMix + defensiveMix;
+                        }
+                        board[move] = 0;
+                        
+                        // Check if this move wins for O
+                        board[move] = -1;
+                        if (winner(board) === -1) {
+                            // Always take winning moves
+                            weight = 1.0;
+                        }
+                        board[move] = 0;
+                        
+                        moveWeights.push({move, weight});
+                    }
+                    
+                    // Normalize weights
+                    const totalWeight = moveWeights.reduce((sum, mw) => sum + mw.weight, 0);
+                    
+                    for (const {move, weight} of moveWeights) {
+                        board[move] = -1;
+                        const childKey = board.join(',') + ',1';
+                        const childIdx = map.get(childKey);
+                        transitions[i].push([childIdx, weight / totalWeight]);
+                        board[move] = 0;
+                    }
+                }
+            }
+            
+            return transitions;
+        }
+        
+        function computeProgress(states, v, iteration, error, done = false) {
+            let xWin = 0, oWin = 0, draw = 0;
+            
+            // Aggregate probabilities for terminal states
+            for (let i = 0; i < states.length; i++) {
+                const {board} = states[i];
+                const w = winner(board);
+                
+                if (w === 1) {
+                    xWin += v[i];
+                } else if (w === -1) {
+                    oWin += v[i];
+                } else if (getAvailableMoves(board).length === 0) {
+                    draw += v[i];
+                }
+            }
+            
+            return {
+                type: 'progress',
+                iteration: iteration,
+                error: error,
+                xWin: xWin,
+                oWin: oWin,
+                draw: draw,
+                done: done,
+                stateCount: states.length
+            };
+        }
+    </script>
+    
+    <script>
+        // ============= GLOBAL VARIABLES =============
+        let MCworker = null; // Web Worker for Markov Chain computation
+        
+        // ============= GLOBAL GAME STATE =============
+        let gameState = {
+            board: [0, 0, 0, 0, 0, 0, 0, 0, 0], // 0=empty, 1=X, -1=O
+            currentPlayer: 1, // X always starts
+            gameOver: false,
+            mode: 'optimal', // 'optimal' or 'random'
+            stats: {
+                wins: 0,
+                losses: 0,
+                draws: 0
+            }
+        };
+        
+        // ============= MARKOV CHAIN STATE =============
+        let markovState = {
+            states: [],
+            transitions: [],
+            stationaryDist: null,
+            convergenceHistory: [],
+            isAnalyzing: false
+        };
+        
+        // ============= GAME CONSTANTS =============
+        const WIN_LINES = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+            [0, 4, 8], [2, 4, 6] // diagonals
+        ];
+        
+        // ============= UTILITY FUNCTIONS =============
+        
+        /**
+         * Check if there's a winner on the board
+         * @param {Array} board - Current board state
+         * @returns {number} 1 if X wins, -1 if O wins, 0 otherwise
+         */
+        function checkWinner(board) {
+            for (let line of WIN_LINES) {
+                const [a, b, c] = line;
+                if (board[a] !== 0 && board[a] === board[b] && board[b] === board[c]) {
+                    return board[a];
+                }
+            }
+            return 0;
+        }
+        
+        /**
+         * Get available moves on the board
+         * @param {Array} board - Current board state
+         * @returns {Array} Array of available position indices
+         */
+        function getAvailableMoves(board) {
+            return board.map((cell, idx) => cell === 0 ? idx : null).filter(idx => idx !== null);
+        }
+        
+        /**
+         * Create a deep copy of the board
+         * @param {Array} board - Board to copy
+         * @returns {Array} New board array
+         */
+        function copyBoard(board) {
+            return [...board];
+        }
+        
+        // ============= MINIMAX ALGORITHM =============
+        
+        /**
+         * Minimax algorithm with memoization for optimal play
+         * Uses a cache to avoid recalculating positions
+         */
+        const minimaxCache = new Map();
+        
+        function minimax(board, player, depth = 0) {
+            // Create cache key from board state and player
+            const cacheKey = board.join(',') + ',' + player;
+            if (minimaxCache.has(cacheKey)) {
+                return minimaxCache.get(cacheKey);
+            }
+            
+            // Check terminal states
+            const winner = checkWinner(board);
+            if (winner !== 0) {
+                minimaxCache.set(cacheKey, winner);
+                return winner;
+            }
+            
+            const moves = getAvailableMoves(board);
+            if (moves.length === 0) {
+                minimaxCache.set(cacheKey, 0);
+                return 0; // Draw
+            }
+            
+            // Recursive minimax evaluation
+            let bestValue = player === 1 ? -Infinity : Infinity;
+            
+            for (let move of moves) {
+                const newBoard = copyBoard(board);
+                newBoard[move] = player;
+                const value = minimax(newBoard, -player, depth + 1);
+                
+                if (player === 1) {
+                    bestValue = Math.max(bestValue, value);
+                    if (bestValue === 1) break; // Alpha-beta pruning
+                } else {
+                    bestValue = Math.min(bestValue, value);
+                    if (bestValue === -1) break; // Alpha-beta pruning
+                }
+            }
+            
+            minimaxCache.set(cacheKey, bestValue);
+            return bestValue;
+        }
+        
+        /**
+         * Get the best move for the current player
+         * @param {Array} board - Current board state
+         * @param {number} player - Current player (1 or -1)
+         * @returns {number} Best move index
+         */
+        function getBestMove(board, player) {
+            const moves = getAvailableMoves(board);
+            let bestMoves = [];
+            let bestValue = player === 1 ? -Infinity : Infinity;
+            
+            for (let move of moves) {
+                const newBoard = copyBoard(board);
+                newBoard[move] = player;
+                const value = minimax(newBoard, -player);
+                
+                if (player === 1) {
+                    if (value > bestValue) {
+                        bestValue = value;
+                        bestMoves = [move];
+                    } else if (value === bestValue) {
+                        bestMoves.push(move);
+                    }
+                } else {
+                    if (value < bestValue) {
+                        bestValue = value;
+                        bestMoves = [move];
+                    } else if (value === bestValue) {
+                        bestMoves.push(move);
+                    }
+                }
+            }
+            
+            // Return random choice among equally good moves
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+        }
+        
+        /**
+         * Get a random move from available positions
+         * @param {Array} board - Current board state
+         * @returns {number} Random move index
+         */
+        function getRandomMove(board) {
+            const moves = getAvailableMoves(board);
+            return moves[Math.floor(Math.random() * moves.length)];
+        }
+        
+        /**
+         * Get a defensive move (block opponent wins)
+         * @param {Array} board - Current board state
+         * @param {number} player - Current player
+         * @returns {number} Defensive move or -1 if none needed
+         */
+        function getDefensiveMove(board, player) {
+            const opponent = -player;
+            
+            // Check if opponent can win on next move
+            for (let move of getAvailableMoves(board)) {
+                const testBoard = copyBoard(board);
+                testBoard[move] = opponent;
+                if (checkWinner(testBoard) === opponent) {
+                    return move; // Block this winning move
+                }
+            }
+            
+            return -1; // No immediate threat
+        }
+        
+        // ============= BOARD UI FUNCTIONS =============
+        
+        /**
+         * Initialize the game board UI
+         */
+        function initializeBoard() {
+            const boardElement = document.getElementById('game-board');
+            boardElement.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.onclick = () => handleCellClick(i);
+                boardElement.appendChild(cell);
+            }
+            
+            updateBoardDisplay();
+        }
+        
+        /**
+         * Update the visual board based on game state
+         */
+        function updateBoardDisplay() {
+            const cells = document.querySelectorAll('.cell');
+            
+            gameState.board.forEach((value, index) => {
+                const cell = cells[index];
+                cell.classList.remove('x', 'o', 'occupied', 'winning');
+                
+                if (value === 1) {
+                    cell.textContent = 'X';
+                    cell.classList.add('x', 'occupied');
+                } else if (value === -1) {
+                    cell.textContent = 'O';
+                    cell.classList.add('o', 'occupied');
+                } else {
+                    cell.textContent = '';
+                }
+            });
+            
+            // Highlight winning line if game is over
+            const winner = checkWinner(gameState.board);
+            if (winner !== 0) {
+                highlightWinningLine();
+            }
+        }
+        
+        /**
+         * Highlight the winning line on the board
+         */
+        function highlightWinningLine() {
+            const cells = document.querySelectorAll('.cell');
+            
+            for (let line of WIN_LINES) {
+                const [a, b, c] = line;
+                if (gameState.board[a] !== 0 && 
+                    gameState.board[a] === gameState.board[b] && 
+                    gameState.board[b] === gameState.board[c]) {
+                    cells[a].classList.add('winning');
+                    cells[b].classList.add('winning');
+                    cells[c].classList.add('winning');
+                    break;
+                }
+            }
+        }
+        
+        // ============= GAME LOGIC =============
+        
+        /**
+         * Handle cell click by human player
+         * @param {number} index - Cell index clicked
+         */
+        function handleCellClick(index) {
+            // Only allow moves when it's O's turn and game isn't over
+            if (gameState.gameOver || gameState.currentPlayer !== -1 || gameState.board[index] !== 0) {
+                return;
+            }
+            
+            // Make the move
+            makeMove(index);
+        }
+        
+        /**
+         * Make a move and update game state
+         * @param {number} index - Position to play
+         */
+        function makeMove(index) {
+            // Update board
+            gameState.board[index] = gameState.currentPlayer;
+            updateBoardDisplay();
+            
+            // Check for game end
+            const winner = checkWinner(gameState.board);
+            const moves = getAvailableMoves(gameState.board);
+            
+            if (winner !== 0 || moves.length === 0) {
+                endGame(winner);
+                return;
+            }
+            
+            // Switch players and continue
+            gameState.currentPlayer = -gameState.currentPlayer;
+            updateGameStatus();
+            
+            // If it's X's turn (AI), make move after delay
+            if (gameState.currentPlayer === 1) {
+                setTimeout(makeAIMove, 500);
+            }
+        }
+        
+        /**
+         * Make AI move based on current mode
+         */
+        function makeAIMove() {
+            if (gameState.gameOver) return;
+            
+            let move;
+            if (gameState.mode === 'optimal') {
+                move = getBestMove(gameState.board, 1);
+            } else {
+                move = getRandomMove(gameState.board);
+            }
+            
+            makeMove(move);
+        }
+        
+        /**
+         * End the game and update statistics
+         * @param {number} winner - 1 for X, -1 for O, 0 for draw
+         */
+        function endGame(winner) {
+            gameState.gameOver = true;
+            
+            // Update statistics
+            if (winner === -1) {
+                gameState.stats.wins++;
+            } else if (winner === 1) {
+                gameState.stats.losses++;
+            } else {
+                gameState.stats.draws++;
+            }
+            
+            updateStatistics();
+            
+            // Update status message
+            const statusElement = document.getElementById('game-status');
+            if (winner === -1) {
+                statusElement.className = 'success-message';
+                statusElement.textContent = 'You win! Great job!';
+            } else if (winner === 1) {
+                statusElement.className = 'warning-message';
+                statusElement.textContent = 'X wins! Better luck next time.';
+            } else {
+                statusElement.className = 'info-message';
+                statusElement.textContent = "It's a draw!";
+            }
+        }
+        
+        /**
+         * Update game status message
+         */
+        function updateGameStatus() {
+            const statusElement = document.getElementById('game-status');
+            if (!gameState.gameOver) {
+                if (gameState.currentPlayer === -1) {
+                    statusElement.className = 'info-message';
+                    statusElement.textContent = 'Your turn (O)';
+                } else {
+                    statusElement.className = 'info-message';
+                    statusElement.textContent = 'X is thinking...';
+                }
+            }
+        }
+        
+        /**
+         * Reset the game to initial state
+         */
+        function resetGame() {
+            gameState.board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+            gameState.currentPlayer = 1;
+            gameState.gameOver = false;
+            
+            updateBoardDisplay();
+            updateGameStatus();
+            
+            // X moves first
+            if (gameState.currentPlayer === 1) {
+                setTimeout(makeAIMove, 500);
+            }
+        }
+        
+        /**
+         * Set game mode (optimal or random)
+         * @param {string} mode - 'optimal' or 'random'
+         */
+        function setGameMode(mode) {
+            gameState.mode = mode;
+            
+            // Update UI
+            document.querySelectorAll('.mode-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Reset game with new mode
+            resetGame();
+        }
+        
+        /**
+         * Show hint for best move
+         */
+        function showHint() {
+            if (gameState.gameOver || gameState.currentPlayer !== -1) {
+                return;
+            }
+            
+            const bestMove = getBestMove(gameState.board, -1);
+            const cells = document.querySelectorAll('.cell');
+            
+            // Highlight best move temporarily
+            cells[bestMove].style.background = '#90EE90';
+            setTimeout(() => {
+                cells[bestMove].style.background = '';
+            }, 2000);
+        }
+        
+        // ============= STATISTICS FUNCTIONS =============
+        
+        /**
+         * Update statistics display
+         */
+        function updateStatistics() {
+            const total = gameState.stats.wins + gameState.stats.losses + gameState.stats.draws;
+            const winRate = total > 0 ? (gameState.stats.wins / total * 100).toFixed(1) : 0;
+            
+            document.getElementById('player-wins').textContent = gameState.stats.wins;
+            document.getElementById('player-losses').textContent = gameState.stats.losses;
+            document.getElementById('player-draws').textContent = gameState.stats.draws;
+            document.getElementById('player-winrate').textContent = winRate + '%';
+        }
+        
+        /**
+         * Reset statistics
+         */
+        function resetStats() {
+            gameState.stats = { wins: 0, losses: 0, draws: 0 };
+            updateStatistics();
+        }
+        
+        // ============= WEB WORKER CREATION =============
+        
+        /**
+         * Create Web Worker from inline script
+         * This allows us to keep everything in a single HTML file
+         */
+        function createWorker() {
+            const workerScript = document.getElementById('worker-script').textContent;
+            const blob = new Blob([workerScript], { type: 'application/javascript' });
+            const workerUrl = URL.createObjectURL(blob);
+            return new Worker(workerUrl);
+        }
+        
+        // ============= MARKOV CHAIN ANALYSIS =============
+        
+        /**
+         * Run REAL Markov chain analysis using Web Worker
+         * This computes the exact stationary distribution over all 5,478 states
+         */
+        async function runMarkovAnalysis() {
+            if (markovState.isAnalyzing) return;
+            
+            markovState.isAnalyzing = true;
+            markovState.convergenceHistory = [];
+            
+            document.getElementById('run-analysis').disabled = true;
+            document.getElementById('computation-indicator').style.display = 'inline-block';
+            
+            const randomPct = parseInt(document.getElementById('o-random').value) / 100;
+            const defensivePct = parseInt(document.getElementById('o-defensive').value) / 100;
+            const tol = Math.pow(10, parseInt(document.getElementById('convergence-tolerance').value));
+            
+            // Create worker if not exists
+            if (!MCworker) {
+                MCworker = createWorker();
+            }
+            
+            // Set up message handler
+            MCworker.onmessage = ({data}) => {
+                if (data.type === 'progress') {
+                    const {iteration, error, xWin, oWin, draw, done, stateCount} = data;
+                    
+                    // Update convergence history
+                    markovState.convergenceHistory.push({
+                        iteration: iteration,
+                        error: error,
+                        xWin: xWin,
+                        oWin: oWin,
+                        draw: draw
+                    });
+                    
+                    // Update visualizations
+                    drawConvergenceChart(
+                        document.getElementById('convergence-chart').getContext('2d'),
+                        document.getElementById('convergence-chart').width,
+                        document.getElementById('convergence-chart').height
+                    );
+                    updateProbabilityBars(xWin, oWin, draw);
+                    
+                    // Update status
+                    document.getElementById('analysis-status').textContent = 
+                        `Iteration ${iteration}: error = ${error.toExponential(2)}`;
+                    
+                    if (stateCount) {
+                        document.getElementById('state-count').textContent = 
+                            `Computing over ${stateCount.toLocaleString()} game states`;
+                    }
+                    
+                    if (done) {
+                        document.getElementById('analysis-status').className = 'success-message';
+                        document.getElementById('analysis-status').textContent = 
+                            `Converged in ${iteration} iterations! Final error: ${error.toExponential(2)}`;
+                        document.getElementById('run-analysis').disabled = false;
+                        document.getElementById('computation-indicator').style.display = 'none';
+                        
+                        // Update theoretical performance
+                        document.getElementById('random-winrate').textContent = 
+                            (oWin * 100).toFixed(2) + '%';
+                        document.getElementById('random-drawrate').textContent = 
+                            (draw * 100).toFixed(2) + '%';
+                        
+                        markovState.isAnalyzing = false;
+                    }
+                } else if (data.type === 'status') {
+                    document.getElementById('analysis-status').textContent = data.message;
+                } else if (data.type === 'error') {
+                    document.getElementById('analysis-status').className = 'error-message';
+                    document.getElementById('analysis-status').textContent = 'Error: ' + data.message;
+                    document.getElementById('run-analysis').disabled = false;
+                    document.getElementById('computation-indicator').style.display = 'none';
+                    markovState.isAnalyzing = false;
+                }
+            };
+            
+            // Handle worker errors
+            MCworker.onerror = (error) => {
+                console.error('Worker error:', error);
+                document.getElementById('analysis-status').className = 'error-message';
+                document.getElementById('analysis-status').textContent = 'Worker error: ' + error.message;
+                document.getElementById('run-analysis').disabled = false;
+                document.getElementById('computation-indicator').style.display = 'none';
+                markovState.isAnalyzing = false;
+            };
+            
+            // Start computation
+            MCworker.postMessage({
+                randomMix: randomPct,
+                defensiveMix: defensivePct,
+                tol: tol
+            });
+            
+            document.getElementById('analysis-status').className = 'info-message';
+            document.getElementById('analysis-status').textContent = 'Initializing eigenvalue computation...';
+        }
+        
+        /**
+         * Draw convergence chart
+         */
+        function drawConvergenceChart(ctx, width, height) {
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, height - 30);
+            ctx.lineTo(width - 10, height - 30);
+            ctx.moveTo(40, 10);
+            ctx.lineTo(40, height - 30);
+            ctx.stroke();
+            
+            // Draw labels
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText('Iteration', width / 2 - 20, height - 5);
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Convergence Error (log)', -60, 0);
+            ctx.restore();
+            
+            if (markovState.convergenceHistory.length < 2) return;
+            
+            // Scale data
+            const maxError = Math.max(...markovState.convergenceHistory.map(h => h.error));
+            const minError = Math.min(...markovState.convergenceHistory.map(h => h.error));
+            const logMax = Math.log10(maxError + 1e-16);
+            const logMin = Math.log10(minError + 1e-16);
+            
+            // Draw convergence line
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            markovState.convergenceHistory.forEach((hist, i) => {
+                const x = 40 + (i / (markovState.convergenceHistory.length - 1)) * (width - 50);
+                const logError = Math.log10(hist.error + 1e-16);
+                const y = height - 30 - ((logError - logMin) / (logMax - logMin)) * (height - 40);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= 5; i++) {
+                const y = 10 + i * (height - 40) / 5;
+                ctx.beginPath();
+                ctx.moveTo(40, y);
+                ctx.lineTo(width - 10, y);
+                ctx.stroke();
+            }
+            
+            // Add iteration markers
+            ctx.fillStyle = '#666';
+            ctx.font = '10px Arial';
+            const iterationStep = Math.ceil(markovState.convergenceHistory.length / 5);
+            for (let i = 0; i < markovState.convergenceHistory.length; i += iterationStep) {
+                const x = 40 + (i / (markovState.convergenceHistory.length - 1)) * (width - 50);
+                ctx.fillText(i.toString(), x - 10, height - 15);
+            }
+        }
+        
+        /**
+         * Update probability bar visualization
+         */
+        function updateProbabilityBars(xWin, oWin, draw) {
+            const bars = document.querySelectorAll('.prob-bar');
+            const values = [xWin, oWin, draw];
+            
+            bars.forEach((bar, index) => {
+                const percentage = values[index] * 100;
+                bar.style.height = percentage + '%';
+                bar.querySelector('.prob-value').textContent = percentage.toFixed(1) + '%';
+            });
+        }
+        
+        /**
+         * Reset analysis
+         */
+        function resetAnalysis() {
+            markovState = {
+                states: [],
+                transitions: [],
+                stationaryDist: null,
+                convergenceHistory: [],
+                isAnalyzing: false
+            };
+            
+            // Clear visualizations
+            const canvas = document.getElementById('convergence-chart');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Reset probability bars
+            updateProbabilityBars(0, 0, 0);
+            
+            // Reset status
+            document.getElementById('analysis-status').className = 'info-message';
+            document.getElementById('analysis-status').textContent = 'Ready to analyze. Click "Run Real Analysis" to start eigenvalue computation.';
+            document.getElementById('state-count').textContent = '';
+            
+            // Terminate worker if exists
+            if (MCworker) {
+                MCworker.terminate();
+                MCworker = null;
+            }
+        }
+        
+        // ============= PARAMETER CONTROLS =============
+        
+        /**
+         * Update slider value displays
+         */
+        function updateSliderDisplays() {
+            // O strategy sliders
+            document.getElementById('o-random').oninput = function() {
+                document.getElementById('o-random-value').textContent = this.value + '%';
+                // Adjust defensive to ensure sum <= 100
+                const defensive = document.getElementById('o-defensive');
+                if (parseInt(this.value) + parseInt(defensive.value) > 100) {
+                    defensive.value = 100 - parseInt(this.value);
+                    document.getElementById('o-defensive-value').textContent = defensive.value + '%';
+                }
+            };
+            
+            document.getElementById('o-defensive').oninput = function() {
+                document.getElementById('o-defensive-value').textContent = this.value + '%';
+                // Adjust random to ensure sum <= 100
+                const random = document.getElementById('o-random');
+                if (parseInt(this.value) + parseInt(random.value) > 100) {
+                    random.value = 100 - parseInt(this.value);
+                    document.getElementById('o-random-value').textContent = random.value + '%';
+                }
+            };
+            
+            // Tolerance slider
+            document.getElementById('convergence-tolerance').oninput = function() {
+                const value = Math.pow(10, parseInt(this.value));
+                document.getElementById('tolerance-value').textContent = value.toExponential(0);
+            };
+        }
+        
+        // ============= INITIALIZATION =============
+        
+        /**
+         * Initialize the application when page loads
+         */
+        window.onload = function() {
+            // Initialize board
+            initializeBoard();
+            
+            // Initialize controls
+            updateSliderDisplays();
+            
+            // Initialize statistics
+            updateStatistics();
+            
+            // Start first game with AI moving
+            setTimeout(makeAIMove, 500);
+            
+            // Set up canvas resizing
+            window.addEventListener('resize', () => {
+                const canvas = document.getElementById('convergence-chart');
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            });
+        };
+        
+        // ============= CLEANUP =============
+        
+        /**
+         * Clean up worker on page unload
+         */
+        window.addEventListener('beforeunload', () => {
+            if (MCworker) {
+                MCworker.terminate();
+            }
+        });
+        
+        // ============= DEBUG FUNCTIONS =============
+        
+        /**
+         * Toggle debug information display
+         */
+        function toggleDebug() {
+            const debugElement = document.getElementById('debug-info');
+            debugElement.classList.toggle('hidden');
+            
+            if (!debugElement.classList.contains('hidden')) {
+                updateDebugInfo();
+            }
+        }
+        
+        /**
+         * Update debug information
+         */
+        function updateDebugInfo() {
+            const debugElement = document.getElementById('debug-info');
+            const boardEval = minimax(gameState.board, gameState.currentPlayer);
+            
+            debugElement.innerHTML = `
+                <strong>Current Board State:</strong> [${gameState.board.join(', ')}]<br>
+                <strong>Current Player:</strong> ${gameState.currentPlayer === 1 ? 'X' : 'O'}<br>
+                <strong>Board Evaluation:</strong> ${boardEval}<br>
+                <strong>Available Moves:</strong> [${getAvailableMoves(gameState.board).join(', ')}]<br>
+                <strong>Game Mode:</strong> ${gameState.mode}<br>
+                <strong>Cache Size:</strong> ${minimaxCache.size} entries<br>
+                <strong>Worker Status:</strong> ${MCworker ? 'Active' : 'Not created'}<br>
+                <strong>Analyzing:</strong> ${markovState.isAnalyzing}
+            `;
+        }
+    </script>
+</body>
+</html>
